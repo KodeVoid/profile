@@ -26,8 +26,12 @@ jobs:
       - name: Calculate Release Name
         id: release
         run: echo "TAG=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
-      - name: lint
-        run: golint ./...
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+            version: latest
+            args: run ./... --timeout=5m
+
       - name: test
         run: go test ./...
 
