@@ -12,9 +12,9 @@ import (
 // ProfileHandler for the /me endpoint
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	user := models.User{
-		Email: "kendrick@example.com",
-		Name:  "Kendrick Lamar",
-		Stack: "Golang/Cloud",
+		Email: "olorik362@gmail.com",
+		Name:  "Kendrick Rukevwe Olori",
+		Stack: "Golang, Docker, Rust, Python Postgres, React",
 	}
 
 	fact, err := app.GetFact(app.FACTAPIURL)
