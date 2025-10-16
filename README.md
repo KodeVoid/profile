@@ -54,3 +54,8 @@ The application accepts two configuration options, which can be set either via c
 ```bash
 # Run the application on port 9090 with error logging
 APP_PORT=9090 LOG_LEVEL=error ./profile_api
+
+### 🌐 API Docs & Live Demo
+
+- OpenAPI docs: [https://kodevoid.github.io/profile/](https://kodevoid.github.io/profile/)    
+
