@@ -31,7 +31,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
             version: latest
-            args: run ./... --timeout=5m
+            args:  ./... --timeout=5m
 
       - name: test
         run: go test ./...
