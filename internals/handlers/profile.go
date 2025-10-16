@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"profile_api/internals/app"
 	"profile_api/internals/models"
-
-	. "profile_api/internals/app"
 	"time"
 )
 
+// ProfileHandler for the /me endpoint
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	user := models.User{
 		Email: "kendrick@example.com",
@@ -17,7 +17,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		Stack: "Golang/Cloud",
 	}
 
-	fact, err := GetFact()
+	fact, err := app.GetFact(app.FACTAPIURL)
 	if err != nil {
 		log.Printf("Error fetching fact: %v", err)
 		fact = "Could not fetch a cat fact at this time."

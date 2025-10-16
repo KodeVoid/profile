@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type CatFact struct {
+type catfact struct {
 	Fact string `json:"fact"`
 }
 
@@ -17,12 +17,13 @@ var client = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
-const apiURL = "https://catfact.ninja/fact"
+// FACTAPIURL Define a constant for the API URL to fetch cat facts
+const FACTAPIURL = "https://catfact.ninja/fact"
 
 // GetFact fetches a random fact from the external catfact.ninja API.
-func GetFact() (string, error) {
+func GetFact(url string) (string, error) {
 
-	resp, err := client.Get(apiURL)
+	resp, err := client.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to make request to catfacts API: %w", err)
 	}
@@ -39,7 +40,7 @@ func GetFact() (string, error) {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var factResponse CatFact
+	var factResponse catfact
 	if err := json.Unmarshal(bodyBytes, &factResponse); err != nil {
 		return "", fmt.Errorf("failed to unmarshal JSON response: %w", err)
 	}

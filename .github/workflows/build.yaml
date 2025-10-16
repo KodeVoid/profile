@@ -1,0 +1,89 @@
+# This workflow uses Go's built-in cross-compilation capabilities to build
+# binaries for Linux, Windows, and macOS, and then attaches them to a GitHub Release.
+name: Go Cross-Build and Release
+
+on:
+  # This workflow runs whenever a new tag in the 'vX.Y.Z' format is pushed.
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+    
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+    
+    
+        
+      - name: Calculate Release Name
+        id: release
+        run: echo "TAG=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
+      - name: lint
+        run: golint ./...
+      - name: test
+        run: go test ./...
+
+
+      - name: Create Artifacts Directory
+        run: mkdir -p artifacts
+
+      - name: Perform Cross-Compilation
+        run: |
+          # Define the target OS/Architecture combinations
+          BIN_NAME="profile_api"
+          
+          # Linux (AMD64)
+          echo "Building for Linux/AMD64..."
+          env GOOS=linux GOARCH=amd64 go build -o artifacts/${BIN_NAME}-linux-amd64
+          
+          # Windows (AMD64)
+          echo "Building for Windows/AMD64..."
+          env GOOS=windows GOARCH=amd64 go build -o artifacts/${BIN_NAME}-windows-amd64.exe
+          
+          # macOS (AMD64 - Intel)
+          echo "Building for macOS/AMD64 (Intel)..."
+          env GOOS=darwin GOARCH=amd64 go build -o artifacts/${BIN_NAME}-darwin-amd64
+          
+          # macOS (ARM64 - Apple Silicon/M-series)
+          echo "Building for macOS/ARM64 (M-Series)..."
+          env GOOS=darwin GOARCH=arm64 go build -o artifacts/${BIN_NAME}-darwin-arm64
+        
+        shell: bash
+
+      - name: Archive and Bundle Artifacts
+        # Zips the binaries for easy download.
+        run: |
+          cd artifacts
+          # Use find to handle the .exe extension for Windows properly in the zip name
+          for file in *; do
+            zip -r "${file}.zip" "${file}"
+            rm "${file}"
+          done
+        shell: bash
+
+      - name: Create GitHub Release
+        # This step creates the official GitHub Release and uploads the zipped binaries.
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ env.TAG }}
+          tag_name: ${{ env.TAG }}
+          body: |
+            ## ${{ env.TAG }} Binary Downloads
+            
+            This is a cross-compiled release of the Go application, built for major platforms.
+            
+            Find the downloads below:
+            - **Linux** (AMD64)
+            - **Windows** (AMD64)
+            - **macOS** (Intel/AMD64 and M-Series/ARM64)
+
+          files: artifacts/*.zip
+          prerelease: false
