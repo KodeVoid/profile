@@ -16,7 +16,10 @@ func TestGetFact_Success(t *testing.T) {
 	expectedFact := "Cats sleep for 70% of their lives."
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := mockResponse{Fact: expectedFact}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			t.Fatalf("failed to encode JSON response: %v", err)
+		}
+
 	}))
 	defer server.Close()
 
@@ -44,7 +47,10 @@ func TestGetFact_NonOKStatus(t *testing.T) {
 
 func TestGetFact_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("not a valid json"))
+		if _, err := w.Write([]byte("not a valid json")); err != nil {
+			t.Fatalf("failed to write invalid JSON response: %v", err)
+		}
+
 	}))
 	defer server.Close()
 
