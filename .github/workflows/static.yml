@@ -1,0 +1,75 @@
+# Simple workflow for deploying interactive OpenAPI documentation to GitHub Pages
+name: Deploy OpenAPI Docs to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Job to build the documentation and deploy it
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      # --- Caching Node Modules to speed up Redoc CLI installation ---
+      # Caches the global NPM directory (~/.npm) where redoc-cli is installed.
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          # Use a simple, stable key based on the runner OS and the tool name/version
+          key: ${{ runner.os }}-redoc-cli-v1.0
+          # Restore keys allow retrieving cache from previous versions if the main key misses
+          restore-keys: ${{ runner.os }}-redoc-cli-
+
+      # --- API DOCUMENTATION BUILD STEPS ---
+      
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a stable LTS version
+          
+      - name: Install Redoc CLI and Generate Docs
+        run: |
+          # Install Redoc CLI globally (will be fast if cache hits)
+          npm install -g redoc-cli
+          
+          # Generate the single-page HTML documentation
+          # Input path: docs/openapi.yaml (as specified by user)
+          # Output path: docs-dist/index.html
+          redoc-cli bundle docs/openapi.yaml -o docs-dist/index.html
+
+      # --- GITHUB PAGES DEPLOYMENT STEPS ---
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        
+      - name: Upload documentation artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload the folder containing the generated index.html file
+          path: 'docs-dist' 
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
