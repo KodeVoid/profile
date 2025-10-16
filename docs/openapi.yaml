@@ -1,0 +1,111 @@
+openapi: 3.0.0
+info:
+  title: Profile API Service
+  version: v1.0.0
+  description: |
+    A simple RESTful API that returns the developer's profile information
+    and integrates with an external service (Cat Facts API) to provide
+    dynamic data.
+servers:
+  - url: http://localhost:8080
+    description: Local development environment (Default)
+  - url: http://150.136.162.179:8080
+    description: Deployed OCI Instance URL
+tags:
+  - name: Profile
+    description: Operations related to developer profile and dynamic data.
+
+paths:
+  /me:
+    get:
+      tags:
+        - Profile
+      summary: Get Developer Profile and a Cat Fact
+      operationId: getDeveloperProfile
+      description: |
+        Returns the developer's pre-defined profile information along with a 
+        randomly fetched cat fact. The timestamp and cat fact are dynamic on 
+        every request.
+      responses:
+        '200':
+          description: Successful retrieval of profile and fact.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+              example:
+                status: success
+                user:
+                  email: olorik362@gmail.com
+                  name: Kendrick Rukevwe Olori
+                  stack: Golang, Docker, Rust, Python Postgres, React
+                timestamp: "2025-10-16T15:43:08Z"
+                fact: "Unlike humans, cats cannot detect sweetness which likely explains why they are not drawn to it at all."
+        '500':
+          description: Internal Server Error (e.g., Cat Facts API failure or network timeout).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ProfileResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Must always be "success".
+          example: success
+        user:
+          $ref: '#/components/schemas/User'
+        timestamp:
+          type: string
+          format: date-time
+          description: Current UTC time in ISO 8601 format.
+          example: "2025-10-16T15:43:08Z"
+        fact:
+          type: string
+          description: A random cat fact fetched from the external Cat Facts API.
+          example: "A cat's nose pad is ridged with a unique pattern, just like a human fingerprint."
+      required:
+        - status
+        - user
+        - timestamp
+        - fact
+
+    User:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Developer's email address.
+          example: olorik362@gmail.com
+        name:
+          type: string
+          description: Developer's full name.
+          example: Kendrick Rukevwe Olori
+        stack:
+          type: string
+          description: Developer's core backend technology stack.
+          example: Golang, Docker, Rust, Python Postgres, React
+      required:
+        - email
+        - name
+        - stack
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Must be "error" for failures.
+          example: error
+        message:
+          type: string
+          description: Detailed error description.
+          example: Failed to fetch cat fact due to external API timeout.
+      required:
+        - status
+        - message
