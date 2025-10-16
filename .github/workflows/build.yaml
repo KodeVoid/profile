@@ -24,26 +24,54 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
-    
-    
-        
+
+      - name: Cache Go Modules and Build Cache
+        # Caches the Go module dependencies and Go build cache.
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Cache Compiled Binaries (Artifacts)
+        id: cache-artifacts
+        uses: actions/cache@v4
+        with:
+          path: artifacts
+          # Key based on OS, Go version, and a hash of all Go files to detect changes.
+          key: ${{ runner.os }}-artifacts-${{ hashFiles('**/*.go') }}-${{ hashFiles('go.mod') }}
+          restore-keys: |
+            ${{ runner.os }}-artifacts-
+
       - name: Calculate Release Name
         id: release
         run: echo "TAG=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
+      
+      # Use an 'if' condition to skip compilation if the artifacts were restored from cache
       - name: Run golangci-lint
+        # Linter must run regardless of cached binaries.
         uses: golangci/golangci-lint-action@v6
         with:
             version: latest
             args:  ./... --timeout=5m
 
       - name: test
+        # Tests must run regardless of cached binaries.
         run: go test ./...
 
-
+      # ----------------------------------------------------------------------
+      # CONDITIONAL COMPILATION STEP
+      # ----------------------------------------------------------------------
       - name: Create Artifacts Directory
+        # This step runs unconditionally to ensure the directory exists for all subsequent steps.
         run: mkdir -p artifacts
 
       - name: Perform Cross-Compilation
+        # Only run compilation if the 'artifacts' cache was a MISS.
+        if: steps.cache-artifacts.outputs.cache-hit != 'true'
         run: |
           # Define the target OS/Architecture combinations
           BIN_NAME="profile_api"
@@ -65,9 +93,10 @@ jobs:
           env GOOS=darwin GOARCH=arm64 go build -o artifacts/${BIN_NAME}-darwin-arm64
         
         shell: bash
+      # ----------------------------------------------------------------------
 
       - name: Archive and Bundle Artifacts
-        # Zips the binaries for easy download.
+        # Zips the binaries for easy download. This runs even if files were restored from cache.
         run: |
           cd artifacts
           # Use find to handle the .exe extension for Windows properly in the zip name
