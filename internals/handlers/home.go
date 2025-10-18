@@ -1,6 +1,9 @@
 package handlers
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -278,5 +281,9 @@ func Home(w http.ResponseWriter, r *http.Request) {
 </html>`
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(html))
+	_, err := w.Write([]byte(html))
+	if err != nil {
+		log.Printf("Failed to write response: %v", err)
+	}
+
 }
