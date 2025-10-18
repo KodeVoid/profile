@@ -55,8 +55,8 @@ func setup() {
 	log.Printf("Configuration loaded: Port=%s, LogLevel=%s", cfg.Port, cfg.LogLevel)
 
 	servemux := http.NewServeMux()
-	servemux.HandleFunc("/me", handlers.ProfileHandler)
-
+	servemux.HandleFunc("GET /{$}", handlers.Home)
+	servemux.HandleFunc("GET /me", handlers.ProfileHandler)
 	serverAddress := ":" + cfg.Port
 	log.Printf("Starting server on %s", serverAddress)
 
